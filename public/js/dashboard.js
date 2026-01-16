@@ -67,6 +67,9 @@ function renderDashboard() {
         <td data-label="Source" style="font-size:0.8rem; color:#a4b0be;">${b.source}</td>
     </tr>
     `).join('');
+
+    // 4. Populate Mobile Quick List
+    populateMobileQuickList(filtered);
 }
 
 // Actions
@@ -140,3 +143,47 @@ manualForm.addEventListener('submit', async (e) => {
     }
 });
 
+// Mobile View Switching
+function switchView(viewName) {
+    if (window.innerWidth > 768) return; // Ignore on Desktop
+
+    // Toggle Sections
+    document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+    document.getElementById(`view-${viewName}`).classList.add('active');
+
+    // Toggle Nav Icons
+    document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
+    // Find nav item by onclick content or index - simplifying by selecting based on viewName
+    const navIndex = viewName === 'overview' ? 0 : 2; // 0=Overview, 2=Bookings
+    document.querySelectorAll('.mobile-bottom-nav .nav-item')[navIndex === 0 ? 0 : 1].classList.add('active');
+}
+
+function populateMobileQuickList(bookings) {
+    const listContainer = document.getElementById('mobile-quick-list');
+    if (!listContainer) return;
+
+    // Sort by date/time (nearest first) and take top 3 pending/confirmed
+    const upcoming = bookings
+        .filter(b => b.status !== 'Completed' && b.status !== 'Cancelled')
+        .sort((a, b) => new Date(`${a.booking_date}T${a.time_slot}`) - new Date(`${b.booking_date}T${b.time_slot}`))
+        .slice(0, 3);
+
+    if (upcoming.length === 0) {
+        listContainer.innerHTML = '<p class="text-muted text-center">No upcoming bookings.</p>';
+        return;
+    }
+
+    listContainer.innerHTML = upcoming.map(b => `
+        <div class="quick-booking-card">
+            <div class="quick-booking-info">
+                <h4>${b.customer_name}</h4>
+                <p>${b.booking_date} at ${b.time_slot}</p>
+                <span class="status-badge status-${b.status}" style="font-size:0.7rem; padding:0.2rem 0.6rem; margin-top:0.3rem; display:inline-block;">${b.status}</span>
+            </div>
+            ${b.status === 'Pending' ?
+            `<button onclick="handleConfirm('${b._id}')" class="btn" style="padding:0.5rem; border-radius:50%; width:40px; height:40px; display:flex; align-items:center; justify-content:center; background:var(--primary-teal-light); color:var(--primary-teal);">
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+            </button>` : ''}
+        </div>
+    `).join('');
+}
