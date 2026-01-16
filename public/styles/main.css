@@ -623,7 +623,7 @@ select:focus {
     }
 
     .view-section.active {
-        display: block;
+        display: block !important;
     }
 }
 
