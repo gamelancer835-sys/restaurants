@@ -69,7 +69,7 @@ function renderDashboard() {
     `).join('');
 
     // 4. Populate Mobile Quick List
-    populateMobileQuickList(filtered);
+    populateMobileQuickList(allBookings);
 }
 
 // Actions
